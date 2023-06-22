@@ -47,6 +47,7 @@ int test_single_command() {
     if (cmd_tree_search(&root, "command_1", &cmd) != 1) return -2;
 
     if (cmd->exec(0, 0, 0) != ROOT_CMD_EXEC_ENTERED) return -3;
+    cmd_tree_node_free(cmd);
 
     return 1;
 }
@@ -74,6 +75,7 @@ int test_two_commands() {
     if (cmd_tree_search(&root, "command_2", &cmd) != 1) return -4;
 
     if (cmd->exec(0, 0, 0) != ROOT_CMD_2_NODE_EXEC_ENTERED) return -5;
+    cmd_tree_node_free(cmd);
 
     return 1;
 }
@@ -116,6 +118,7 @@ int test_subcmd_commands() {
 
     int result = cmd->exec(0, cmd->argc, cmd->argv);
     if (result != ROOT_SUBCMD_NODE_EXEC_ENTERED) return result;
+    cmd_tree_node_free(cmd);
 
     return 1;
 }
@@ -164,6 +167,7 @@ int test_sub_subcmd_commands() {
 
     int result = cmd->exec(0, cmd->argc, cmd->argv);
     if (result != ROOT_SUBCMD_2_NODE_EXEC_ENTERED) return result;
+    cmd_tree_node_free(cmd);
 
     return 1;
 }

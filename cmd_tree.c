@@ -107,3 +107,13 @@ int cmd_tree_search(cmd_tree_node_t *root, char *cmd,
 
     return 1;
 }
+
+void cmd_tree_node_free(cmd_tree_node_t *n) {
+    if (n->argc > 0) {
+        for (uint8_t i = 0; i < n->argc; i++) {
+            free(n->argv[i]);
+        }
+    }
+    free(n->argv);
+    n->argv = NULL;
+}
