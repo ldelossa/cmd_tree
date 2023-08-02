@@ -1,4 +1,4 @@
-CFLAGS += -g3
+CFLAGS += -g3 -O0
 
 all: cmd_tree_test cmd_tree.o
 
