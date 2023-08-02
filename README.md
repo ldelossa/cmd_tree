@@ -144,7 +144,15 @@ Next, the `cmd_tree_search` takes the root of the tree, a command string, and a
 
 When `cmd_tree_search` completes the `cmd` pointer now points to the `root_cmd`
 node and any arguments provided after `command_1` in the string is available in
-`cmd->argv` along with the number of args in `cmd-argc`.
+`cmd->argv` along with the number of args in `cmd->argc`.
+
+In our case one string, `arg_1`, exists after the command's name in the search
+string, `command_1 arg_1`.
+Because there are no sub-commands in our tree named `arg_1`, this string will be
+assigned to `arg->v` as an argument to `command_1`'s `exec` function.
+
+In constrast if `command_1` had a child `cmd_tree_node_t` who's name was `arg_1`
+the `cmd_tree_search` function would return the command node for `arg_1`.
 
 You can now call the command's `exec` function with the parsed arguments and the
 argument count!
