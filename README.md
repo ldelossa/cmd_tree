@@ -133,7 +133,7 @@ A `cmd_tree` must have a single root which typically has no name and an `exec`
 function which handles the case where no valid command was supplied.
 This root node is called when no other valid command can be found in the `cmd_tree`.
 
-A single command `root_cmd` which coorespends to the string `command_1` is declared
+A single command `root_cmd` which cooresponds to the string `command_1` is declared
 and the `test_command_one_exec` function provides the `exec` function for the
 command node.
 
