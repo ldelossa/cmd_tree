@@ -47,8 +47,15 @@ int cmd_tree_node_add_child(cmd_tree_node_t *n, cmd_tree_node_t *child);
  *
  * @return 1 if the command node was found and -1 if an error occurred.
  */
-int cmd_tree_search(cmd_tree_node_t *root, char *cmd,
-                    cmd_tree_node_t **cmd_node);
+int cmd_tree_search(cmd_tree_node_t *root, int argc, char *argv[],
+                         cmd_tree_node_t **cmd_node);
+
+/**
+ * Like cmd_tree_search but takes a pointer of string pointers instead of
+ * a space delimited cmd string
+ */
+int cmd_tree_search_argv(cmd_tree_node_t *root, int argc, char *argv[],
+                         cmd_tree_node_t **cmd_node);
 
 /**
  * Frees any memory allocated for the node returned from "cmd_tree_search."

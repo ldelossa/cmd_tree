@@ -24,10 +24,12 @@ int test_root_node_exec(void *ctx, uint8_t argc, char **argv) {
 }
 
 int test_sanity() {
+    int argc = 0;
+    char *argv[] = {};
     cmd_tree_node_t *cmd = 0;
     cmd_tree_node_t root = {.exec = test_root_node_exec};
 
-    if (cmd_tree_search(&root, "", &cmd) != 1) return -1;
+    if (cmd_tree_search(&root, argc, argv, &cmd) != 1) return -1;
 
     if (cmd->exec(0, cmd->argc, cmd->argv) != ROOT_NODE_EXECED) return -2;
 
@@ -44,6 +46,8 @@ int test_command_one_exec(void *ctx, uint8_t argc, char **argv) {
 }
 
 int test_single_command() {
+    int argc = 2;
+    char *argv[] = {"command_1", "arg_1"};
     cmd_tree_node_t *cmd = 0;
     cmd_tree_node_t root = {.exec = test_root_node_exec};
     cmd_tree_node_t root_cmd = {.name = "command_1",
@@ -51,11 +55,10 @@ int test_single_command() {
 
     if (cmd_tree_node_add_child(&root, &root_cmd) != 1) return -1;
 
-    if (cmd_tree_search(&root, "command_1 arg_1", &cmd) != 1) return -2;
+    if (cmd_tree_search(&root, argc, argv, &cmd) != 1) return -2;
 
     if (cmd->exec(0, cmd->argc, cmd->argv) != COMMAND_ONE_NODE_EXECED)
         return -3;
-    cmd_tree_node_free(cmd);
 
     return 1;
 }
@@ -66,6 +69,10 @@ int test_command_two_exec(void *ctx, uint8_t argc, char **argv) {
 }
 
 int test_two_commands() {
+    int argc = 2;
+    char *argv[] = {"command_1", "arg_1"};
+    int argc2 = 1;
+    char *argv2[] = {"command_2"};
     cmd_tree_node_t *cmd = 0;
     cmd_tree_node_t root = {.exec = test_root_node_exec};
     cmd_tree_node_t root_cmd = {.name = "command_1",
@@ -77,14 +84,14 @@ int test_two_commands() {
 
     if (cmd_tree_node_add_child(&root, &root_cmd_2) != 1) return -1;
 
-    if (cmd_tree_search(&root, "command_1 arg_1", &cmd) != 1) return -2;
+    if (cmd_tree_search(&root, argc, argv, &cmd) != 1) return -2;
 
-    if (cmd->exec(0, cmd->argc, cmd->argv) != COMMAND_ONE_NODE_EXECED) return -3;
+    if (cmd->exec(0, cmd->argc, cmd->argv) != COMMAND_ONE_NODE_EXECED)
+        return -3;
 
-    if (cmd_tree_search(&root, "command_2", &cmd) != 1) return -4;
+    if (cmd_tree_search(&root, argc2, argv2, &cmd) != 1) return -4;
 
     if (cmd->exec(0, 0, 0) != COMMAND_TWO_NODE_EXECED) return -5;
-    cmd_tree_node_free(cmd);
 
     return 1;
 }
@@ -109,6 +116,8 @@ int test_subcommand_exec(void *ctx, uint8_t argc, char **argv) {
 }
 
 int test_subcmd_commands() {
+    int argc = 4;
+    char *argv[] = {"command_1", "subcommand", "arg_1", "arg_2"};
     cmd_tree_node_t *cmd = 0;
     cmd_tree_node_t root = {.exec = test_root_node_exec};
     cmd_tree_node_t root_cmd = {.name = "command_1",
@@ -116,6 +125,8 @@ int test_subcmd_commands() {
     cmd_tree_node_t root_cmd_subcmd = {.name = "subcommand",
                                        .exec = test_subcommand_exec};
     // here to just ensure adding another node doesn't break anything.
+    int argc2 = 1;
+    char *argv2[] = {"command_2"};
     cmd_tree_node_t root_cmd_2 = {.name = "command_2",
                                   .exec = test_command_two_exec};
 
@@ -124,12 +135,10 @@ int test_subcmd_commands() {
 
     if (cmd_tree_node_add_child(&root, &root_cmd_2) != 1) return -1;
 
-    if (cmd_tree_search(&root, "command_1 subcommand arg_1 arg_2", &cmd) != 1)
-        return -4;
+    if (cmd_tree_search(&root, argc, argv, &cmd) != 1) return -4;
 
     int result = cmd->exec(0, cmd->argc, cmd->argv);
     if (result != SUBCOMMAND_NODE_EXECED) return result;
-    cmd_tree_node_free(cmd);
 
     return 1;
 }
@@ -154,12 +163,17 @@ int test_sub_subcommand_exec(void *ctx, uint8_t argc, char **argv) {
 }
 
 int test_sub_subcmd_commands() {
+    int argc = 6;
+    char *argv[] = {"command_1", "subcommand", "subcommand_2",
+                    "arg_1",     "arg_2",      "arg_3"};
     cmd_tree_node_t *cmd = 0;
     cmd_tree_node_t root = {.exec = test_root_node_exec};
     cmd_tree_node_t root_cmd = {.name = "command_1",
                                 .exec = test_command_one_exec};
     cmd_tree_node_t root_cmd_subcmd = {.name = "subcommand",
                                        .exec = test_subcommand_exec};
+    int argc2 = 1;
+    char *argv2[] = {"command_2"};
     cmd_tree_node_t root_cmd_sub_subcmd = {.name = "subcommand_2",
                                            .exec = test_sub_subcommand_exec};
 
@@ -169,14 +183,10 @@ int test_sub_subcmd_commands() {
     if (cmd_tree_node_add_child(&root_cmd_subcmd, &root_cmd_sub_subcmd) != 1)
         return -1;
 
-    if (cmd_tree_search(&root,
-                        "command_1 subcommand subcommand_2 arg_1 arg_2 arg_3",
-                        &cmd) != 1)
-        return -4;
+    if (cmd_tree_search(&root, argc, argv, &cmd) != 1) return -4;
 
     int result = cmd->exec(0, cmd->argc, cmd->argv);
     if (result != SUB_SUBCOMMAND_NODE_EXECED) return result;
-    cmd_tree_node_free(cmd);
 
     return 1;
 }
