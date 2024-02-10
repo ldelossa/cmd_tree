@@ -65,30 +65,15 @@ int cmd_tree_node_add_child(cmd_tree_node_t *n, cmd_tree_node_t *child);
  * node.
  *
  * @param root The root node of the cmd_tree to search from.
- * @param cmd The name of the command to search for.
+ * @param argc The length of argv.
+ * @param argv An array of string pointers of size @argc
  * @param cmd_node A pointer to a cmd_tree_node_t pointer that will be set to
  * the found command node.
  *
  * @return 1 if the command node was found and -1 if an error occurred.
  */
-int cmd_tree_search(cmd_tree_node_t *root, char *cmd,
+int cmd_tree_search(cmd_tree_node_t *root, int argc, char *argv[],
                     cmd_tree_node_t **cmd_node);
-
-/**
- * Frees any memory allocated for the node returned from "cmd_tree_search."
- *
- * The argument n itself is not freed as the caller is responsible for creating
- * and freeing all of the command tree's nodes.
- *
- * Rather, this function frees any memory allocated during the last search and
- * parsing of the string command.
- *
- * It should be used once the caller has called the node's exec function pointer
- * and will no longer utilize the node.
- *
- * @param n The node to free.
- */
-void cmd_tree_node_free(cmd_tree_node_t *n);
 ```
 
 Let's take a look at our simplest meaningful test as an example of building a
@@ -110,6 +95,8 @@ int test_command_one_exec(void *ctx, uint8_t argc, char **argv) {
 }
 
 int test_single_command() {
+    int argc = 2;
+    char *argv[] = {"command_1", "arg_1"};
     cmd_tree_node_t *cmd = 0;
     cmd_tree_node_t root = {.exec = test_root_node_exec};
     cmd_tree_node_t root_cmd = {.name = "command_1",
@@ -117,51 +104,55 @@ int test_single_command() {
 
     if (cmd_tree_node_add_child(&root, &root_cmd) != 1) return -1;
 
-    if (cmd_tree_search(&root, "command_1 arg_1", &cmd) != 1) return -2;
+    if (cmd_tree_search(&root, argc, argv, &cmd) != 1) return -2;
 
     if (cmd->exec(0, cmd->argc, cmd->argv) != COMMAND_ONE_NODE_EXECED)
         return -3;
-    cmd_tree_node_free(cmd);
 
     return 1;
 }
 ```
 
-A few points become apparent with the example above.
+In the above example we first define callback "exec" functions for the root node
+and the "command_1" node. 
 
-A `cmd_tree` must have a single root which typically has no name and an `exec`
-function which handles the case where no valid command was supplied.
-This root node is called when no other valid command can be found in the `cmd_tree`.
+We define our "argc" and "argv" variables which hold the number of arguments
+and argument strings respectively. 
 
-A single command `root_cmd` which cooresponds to the string `command_1` is declared
-and the `test_command_one_exec` function provides the `exec` function for the
-command node.
+Next, we begin to define our command tree.
+The tree always starts with a single root and children are added to it.
+We add the "command_1" node to the tree under our root.
 
-`cmd_tree_node_add_child` is then used to add a child to the `root` node.
+A search of the tree is then performed with the arguments "command_1 arg_1". 
+The appropriate node to handle this command string is then returned in the
+"cmd" variable.
 
-Next, the `cmd_tree_search` takes the root of the tree, a command string, and a
-`cmd_tree_node_t *` and searches the tree for a command with the name `command_1`.
-
-When `cmd_tree_search` completes the `cmd` pointer now points to the `root_cmd`
-node and any arguments provided after `command_1` in the string is available in
-`cmd->argv` along with the number of args in `cmd->argc`.
-
-In our case one string, `arg_1`, exists after the command's name in the search
-string, `command_1 arg_1`.
-Because there are no sub-commands in our tree named `arg_1`, this string will be
-assigned to `arg->v` as an argument to `command_1`'s `exec` function.
-
-In constrast if `command_1` had a child `cmd_tree_node_t` who's name was `arg_1`
-the `cmd_tree_search` function would return the command node for `arg_1`.
-
-You can now call the command's `exec` function with the parsed arguments and the
-argument count!
-
-Finally, remember to call `cmd_tree_node_free` when the execution is finished.
-This does **not** free the `root_cmd` since the calling code can define this
-statically, however it does clean up some heap allocated strings used during
-argument assignment to cmd->argc, cmd->argv. After free you should not call
-`cmd->exec` until another `cmd_tree_search` is performed.
+When the appropriate node is returned its "argc" and "argv" variables will hold
+the number of trailing arguments provided to the command. 
+In our example this will be 1, the "arg_1" argument. 
+The node's "exec" function can then be invoked with these variables. 
+The node's "exec" function is responsible for interpreting any trailing arguments
+along with returning an integer value who's meaning is specific to the application.
 
 This is the general pattern of the library.
-Check out `cmd_tree_test.c` for more complex samples.
+Check out `cmd_tree_test.c` for more complex examples.
+
+## Memory Management
+
+Memory is not allocated by any functions exposed in the header.
+
+The application utilizing "cmd_tree" is expected to allocate the `argv` array
+corresponding to the desired command and free it once the command tree is no
+longer in use.
+
+`cmd_tree_node_t` structures can be defined globally and linked into a tree 
+during runtime. 
+When `cmd_tree_search` is ran it will update only `argc` and `argv` values
+of `cmd_tree_node_t`. 
+The application should not depend on any `argc` and `argv` values of a node 
+which was not returned from a recent call to `cmd_tree_search` as the values
+maybe stale or used only during the search process.
+
+## Compilation
+
+The library is extremely lean and only depends on 

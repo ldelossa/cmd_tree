@@ -3,8 +3,13 @@
 #define CMD_TREE_H
 #include <stdint.h>
 
+#define CMD_TREE_MAX_NAME 256
+
 /**
  * Function pointer which implements a node's command.
+ * @param ctx A pointer to application specific context.
+ * @param argc The count of trailing arguments to the command.
+ * @param argv The trailing arguments to the command.
  */
 typedef int (*cmd_tree_node_exec)(void *ctx, uint8_t argc, char **argv);
 
@@ -23,7 +28,7 @@ typedef struct cmd_tree_node {
     // Number of arguments for the command
     uint8_t argc;
     // Name of the command
-    char name[256];
+    char name[CMD_TREE_MAX_NAME];
 } cmd_tree_node_t;
 
 /**
@@ -41,36 +46,14 @@ int cmd_tree_node_add_child(cmd_tree_node_t *n, cmd_tree_node_t *child);
  * node.
  *
  * @param root The root node of the cmd_tree to search from.
- * @param cmd The name of the command to search for.
+ * @param argc The length of argv.
+ * @param argv An array of string pointers of size @argc
  * @param cmd_node A pointer to a cmd_tree_node_t pointer that will be set to
  * the found command node.
  *
  * @return 1 if the command node was found and -1 if an error occurred.
  */
 int cmd_tree_search(cmd_tree_node_t *root, int argc, char *argv[],
-                         cmd_tree_node_t **cmd_node);
-
-/**
- * Like cmd_tree_search but takes a pointer of string pointers instead of
- * a space delimited cmd string
- */
-int cmd_tree_search_argv(cmd_tree_node_t *root, int argc, char *argv[],
-                         cmd_tree_node_t **cmd_node);
-
-/**
- * Frees any memory allocated for the node returned from "cmd_tree_search."
- *
- * The argument n itself is not freed as the caller is responsible for creating
- * and freeing all of the command tree's nodes.
- *
- * Rather, this function frees any memory allocated during the last search and
- * parsing of the string command.
- *
- * It should be used once the caller has called the node's exec function pointer
- * and will no longer utilize the node.
- *
- * @param n The node to free.
- */
-void cmd_tree_node_free(cmd_tree_node_t *n);
+                    cmd_tree_node_t **cmd_node);
 
 #endif  // CMD_TREE_H

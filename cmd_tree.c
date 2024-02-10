@@ -33,6 +33,7 @@ int cmd_tree_node_add_child(cmd_tree_node_t *n, cmd_tree_node_t *child) {
     return cmd_tree_node_add_sibling(n->child, child);
 }
 
+// assigns any extraneous tokens in argv to the target node.
 int cmd_tree_search_assign_args(cmd_tree_node_t *root, int i, int argc,
                                 char **argv) {
     root->argv = argv + i;
@@ -84,14 +85,4 @@ int cmd_tree_search(cmd_tree_node_t *root, int argc, char *argv[],
 
     cmd_tree_search_recur(root, 0, argc, argv, cmd_node);
     return 1;
-}
-
-void cmd_tree_node_free(cmd_tree_node_t *n) {
-    if (n->argc > 0) {
-        for (uint8_t i = 0; i < n->argc; i++) {
-            free(n->argv[i]);
-        }
-    }
-    free(n->argv);
-    n->argv = NULL;
 }
