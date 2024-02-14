@@ -33,23 +33,20 @@ int cmd_tree_node_add_child(cmd_tree_node_t *n, cmd_tree_node_t *child) {
     return cmd_tree_node_add_sibling(n->child, child);
 }
 
-// assigns any extraneous tokens in argv to the target node.
 int cmd_tree_search_assign_args(cmd_tree_node_t *root, int i, int argc,
                                 char **argv) {
+
     root->argv = argv + i;
     root->argc = argc - i;
     return 1;
 }
 
+// recursively search for nodes which matches the latter most token in argv.
+// we enter here only when argc > 0.
 void cmd_tree_search_recur(cmd_tree_node_t *cur, int i, int argc, char *argv[],
                            cmd_tree_node_t **node) {
-	// out of argv bounds, we need to return
+    // out of argv bounds, backtrack.
     if (i == argc) return;
-
-	// current node maybe our target if it has no children, prepare it
-	// to be.
-    *node = cur;
-    cmd_tree_search_assign_args(cur, i, argc, argv);
 
     char *token = argv[i];
 
@@ -57,12 +54,9 @@ void cmd_tree_search_recur(cmd_tree_node_t *cur, int i, int argc, char *argv[],
 
     while (child) {
         if (strcmp(child->name, token) == 0) {
-			// a child of our current node matches the current token, it maybe
-			// our match so prepare it to be, but lets keep search until we 
-			// run out of tokens, the child has no children, or the child has no
-			// children which match a token.
             *node = child;
-            cmd_tree_search_assign_args(child, i, argc, argv);
+			// assign all trailing arguments to the child node.
+            cmd_tree_search_assign_args(child, i + 1, argc, argv);
             cmd_tree_search_recur(child, i + 1, argc, argv, node);
             break;
         }
@@ -78,8 +72,11 @@ int cmd_tree_search(cmd_tree_node_t *root, int argc, char *argv[],
         return -1;
     }
 
+	*cmd_node = root;
+
+	// if there's no arguments just return root
     if (argc == 0) {
-        *cmd_node = root;
+		root->argc = 0;
         return 1;
     }
 

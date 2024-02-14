@@ -36,6 +36,30 @@ int test_sanity() {
     return 1;
 }
 
+int test_command_one_exec_without_arg(void *ctx, uint8_t argc, char **argv) {
+    printf("command 1 entered \n");
+
+    return COMMAND_ONE_NODE_EXECED;
+}
+
+int test_single_command_without_arg() {
+    int argc = 1;
+    char *argv[] = {"command_1"};
+    cmd_tree_node_t *cmd = 0;
+    cmd_tree_node_t root = {.exec = test_root_node_exec};
+    cmd_tree_node_t root_cmd = {.name = "command_1",
+                                .exec = test_command_one_exec_without_arg};
+
+    if (cmd_tree_node_add_child(&root, &root_cmd) != 1) return -1;
+
+    if (cmd_tree_search(&root, argc, argv, &cmd) != 1) return -2;
+
+    if (cmd->exec(0, cmd->argc, cmd->argv) != COMMAND_ONE_NODE_EXECED)
+        return -3;
+
+    return 1;
+}
+
 int test_command_one_exec(void *ctx, uint8_t argc, char **argv) {
     printf("command 1 entered \n");
 
